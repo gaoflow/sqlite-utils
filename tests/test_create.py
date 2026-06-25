@@ -1116,6 +1116,18 @@ def test_insert_all_single_column(fresh_db):
     assert table.pks == ["name"]
 
 
+def test_insert_all_pk_not_in_row_no_keyerror():
+    # Regression test for https://github.com/simonw/sqlite-utils/issues/732
+    # insert_all with n=1 and pk not present in the row schema should not raise KeyError
+    for n in range(4):
+        db = Database(memory=True)
+        db.conn.execute("CREATE TABLE t (a TEXT, b INT, PRIMARY KEY (a, b))")
+        rows = [{"a": f"x{i}", "b": i} for i in range(n)]
+        # Should not raise regardless of the number of rows
+        db["t"].insert_all(rows, pk="nonexistent_pk", alter=True)
+        assert list(db["t"].rows) == rows
+
+
 @pytest.mark.parametrize("method_name", ("insert_all", "upsert_all"))
 def test_insert_all_analyze(fresh_db, method_name):
     table = fresh_db["table"]

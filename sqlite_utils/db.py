@@ -3714,9 +3714,13 @@ class Table(Queryable):
                     if hash_id:
                         self.last_pk = row[hash_id]
                     elif isinstance(pk, str):
-                        self.last_pk = row[pk]
+                        self.last_pk = row.get(pk)
                     else:
-                        self.last_pk = tuple(row[p] for p in pk)
+                        self.last_pk = (
+                            tuple(row[p] for p in pk)
+                            if all(p in row for p in pk)
+                            else None
+                        )
                 else:
                     self.last_pk = self.last_rowid
             else:
